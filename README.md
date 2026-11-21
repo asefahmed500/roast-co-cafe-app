@@ -1,56 +1,60 @@
-# Welcome to your Expo app 👋
+# Roast & Co. — café app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native (Expo) UI built from the 12-screen HTML design in `cafe-screens.html`.
+Styled with gluestack-ui v5 tokens + NativeWind v5 (Tailwind v4), navigation with Expo Router.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run
 
 ```bash
-npm run reset-project
+npm install
+npm start            # then press i (iOS) / a (Android) / w (web)
+npm run ios
+npm run android
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Requires the Expo Go app or a development build for a physical device.
 
-### Other setup steps
+## Structure
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```
+src/
+  app/                 # Expo Router routes (one file per screen)
+    (app)/             # tabbed area: home, menu, bag, profile
+    item/[id].tsx      # item detail
+    order/[id].tsx     # order tracking
+  screens/             # screen bodies (thin routes render these)
+  components/
+    ui/                # gluestack-ui v5 components (generated)
+    kit.tsx            # shared app components (cards, nav, buttons, chips)
+    icons.tsx          # SVG icons from the design
+    illustrations.tsx  # cup / iced / croissant / cake / bean art
+  data/menu.ts         # menu items, cafés, categories
+  store/cart.tsx       # local cart state + totals + promo
+  theme.ts             # token values mirrored in global.css
+  global.css           # semantic color tokens (bg-background, text-ink, …)
+```
 
-## Learn more
+## Design tokens
 
-To learn more about developing your project with Expo, look at the following resources:
+Colors are defined once in `src/global.css` as semantic Tailwind tokens
+(`background`, `card`, `foreground`, `muted`, `espresso`, `caramel`, `latte`,
+`sage`, `line`, …). Components use only these classes — no raw hex values.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Implemented screens
 
-## Join the community
+1. Splash
+2. Welcome 1 – Coffee your way
+3. Welcome 2 – Order ahead
+4. Sign in
+5. Choose café
+6. Home
+7. Menu
+8. Item detail
+9. Your bag
+10. Checkout
+11. Order tracking
+12. Rewards & profile
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Interactions are local-state only: category filters, add-to-bag, quantity
+steppers, promo code (`COFFEE10`), option selection, and place-order → tracking.
+No backend is connected yet.
