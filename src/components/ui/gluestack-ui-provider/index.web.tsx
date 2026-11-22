@@ -33,6 +33,7 @@ export function GluestackUIProvider({
 
   useSafeLayoutEffect(() => {
     if (mode !== 'system') return;
+    script(mode);
     const media = window.matchMedia('(prefers-color-scheme: dark)');
 
     media.addListener(handleMediaQuery);
@@ -42,12 +43,6 @@ export function GluestackUIProvider({
 
   return (
     <>
-      <script
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{
-          __html: `(${script.toString()})('${mode}')`,
-        }}
-      />
       <OverlayProvider>
         <ToastProvider>{props.children}</ToastProvider>
       </OverlayProvider>

@@ -1,60 +1,158 @@
-# Roast & Co. — café app
+# Roast & Co. — full-stack café app
 
-A React Native (Expo) UI built from the 12-screen HTML design in `cafe-screens.html`.
-Styled with gluestack-ui v5 tokens + NativeWind v5 (Tailwind v4), navigation with Expo Router.
+A production-oriented, cross-platform coffee ordering app. The UI is an Expo /
+React Native app (iOS, Android and web) built from the 12-screen design in
+`cafe-screens.html`. The backend is a Cloudflare Worker with Hono, a Cloudflare
+D1 (SQLite) database, email/password sessions, Zod validation, rate limiting and
+integration tests that run inside the Workers runtime.
 
-## Run
+## Architecture
+
+```
+Expo Router app (src/app, src/screens)
+   │  typed API client (src/lib/api.ts)
+   │  AuthProvider · CatalogProvider · CafeProvider · CartProvider
+   ▼
+Cloudflare Worker (worker/src/index.ts, Hono)
+   │  D1 binding "DB"
+   ▼
+D1 tables: users, sessions, cafes, menu_items, promos, carts, orders, rate_limits
+```
+
+Security choices:
+
+- Passwords are hashed with PBKDF2-SHA256 (210k iterations, per-user salt).
+- Sessions are opaque 256-bit tokens; only their SHA-256 hash is stored, and
+  tokens are compared in constant time. Sessions expire (7 days by default).
+- Prices are recomputed from `menu_items` on the server — client-sent prices
+  are ignored.
+- All request bodies are validated with shared Zod schemas.
+- Auth endpoints are rate limited per IP.
+- Security headers + configurable CORS are applied to `/api/*`.
+
+## Run locally
 
 ```bash
 npm install
-npm start            # then press i (iOS) / a (Android) / w (web)
-npm run ios
-npm run android
+cp .env.example .env          # optional; defaults to http://localhost:8787
+
+# Terminal 1 — API on http://localhost:8787
+npm run db:migrate:local
+npm run worker:dev
+
+# Terminal 2 — app
+npm start                     # i / a / w, or `npm run web`
 ```
 
-Requires the Expo Go app or a development build for a physical device.
+For a physical device set `EXPO_PUBLIC_API_URL` in `.env` to your machine's LAN
+address (`http://192.168.x.x:8787`) and allow port 8787 through your firewall.
+The Android emulator uses `http://10.0.2.2:8787`.
 
-## Structure
+## Quality checks
 
-```
-src/
-  app/                 # Expo Router routes (one file per screen)
-    (app)/             # tabbed area: home, menu, bag, profile
-    item/[id].tsx      # item detail
-    order/[id].tsx     # order tracking
-  screens/             # screen bodies (thin routes render these)
-  components/
-    ui/                # gluestack-ui v5 components (generated)
-    kit.tsx            # shared app components (cards, nav, buttons, chips)
-    icons.tsx          # SVG icons from the design
-    illustrations.tsx  # cup / iced / croissant / cake / bean art
-  data/menu.ts         # menu items, cafés, categories
-  store/cart.tsx       # local cart state + totals + promo
-  theme.ts             # token values mirrored in global.css
-  global.css           # semantic color tokens (bg-background, text-ink, …)
+```bash
+npm run typecheck   # TypeScript across app + Worker + tests
+npm test            # 11 Workers-runtime integration tests (Vitest plugin)
+npm run test:e2e    # builds web bundle + 10 Playwright E2E tests (Chrome)
+npm run web:export  # production web bundle
 ```
 
-## Design tokens
+The API suite covers health/menu seeding, validation errors (including
+malformed JSON), registration and login, session invalidation, rate limiting,
+cart/promo persistence, option surcharges, loyalty updates, idempotent order
+creation, café validation, pricing and ownership/IDOR checks.
 
-Colors are defined once in `src/global.css` as semantic Tailwind tokens
-(`background`, `card`, `foreground`, `muted`, `espresso`, `caramel`, `latte`,
-`sage`, `line`, …). Components use only these classes — no raw hex values.
+The Playwright suite runs against the **built** web bundle and a real local
+Worker against D1. It covers onboarding, validation, duplicate accounts, login,
+session restore, protected-route redirects, cross-account cart isolation,
+café search/selection, menu filters/search, notifications, favourites, loading
+states and the complete order workflow (options → promo → checkout → tracking →
+history → cleared cart). Each test uses an isolated client IP so auth rate
+limits do not interfere.
 
-## Implemented screens
+## Deploy the API
 
-1. Splash
-2. Welcome 1 – Coffee your way
-3. Welcome 2 – Order ahead
-4. Sign in
-5. Choose café
-6. Home
-7. Menu
-8. Item detail
-9. Your bag
-10. Checkout
-11. Order tracking
-12. Rewards & profile
+1. Create the D1 databases in Cloudflare:
 
-Interactions are local-state only: category filters, add-to-bag, quantity
-steppers, promo code (`COFFEE10`), option selection, and place-order → tracking.
-No backend is connected yet.
+   ```bash
+   npx wrangler d1 create roast-co-db
+   npx wrangler d1 create roast-co-db-staging
+   ```
+
+2. Copy each returned `database_id` into the matching entry in
+   `wrangler.jsonc` (replace the `00000000-…` placeholders). Set
+   `ALLOWED_ORIGIN` to your web app origin (comma-separated list allowed).
+
+3. Apply migrations and deploy:
+
+   ```bash
+   npm run db:migrate:local
+   npm run db:migrate:staging
+   npm run db:migrate:remote
+   npm run worker:deploy:staging
+   npm run worker:deploy
+   ```
+
+4. Set the production API URL in `app.json` → `extra.apiUrl` and in
+   `eas.json` build profiles (or pass `EXPO_PUBLIC_API_URL` as an EAS secret).
+
+`wrangler secret put` is available for future secrets; the current API needs
+none beyond the Wrangler-managed D1 binding. Workers Logs and Traces are enabled
+in `wrangler.jsonc`, and requests emit structured JSON logs.
+
+## Build the apps
+
+```bash
+npm install -g eas-cli
+eas login
+eas init                       # once, links the EAS project id
+eas build --profile preview --platform all
+eas build --profile production --platform all
+```
+
+`eas.json` defines development, preview and production profiles. Submit with
+`eas submit --platform ios` / `android` after configuring store credentials.
+
+## API reference
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| GET | `/api/health` | – | Liveness |
+| POST | `/api/auth/register` | – | Create account, returns token + user |
+| POST | `/api/auth/login` | – | Sign in |
+| GET | `/api/auth/me` | Bearer | Current user |
+| POST | `/api/auth/logout` | Bearer | Revoke session |
+| GET | `/api/menu`, `/api/menu/:id` | – | Catalog |
+| GET | `/api/cafes`, `/api/promos/:code` | – | Locations / promo lookup |
+| GET/PUT | `/api/cart` | Bearer | Server-side cart |
+| POST/GET | `/api/orders` | Bearer | Place / list orders |
+| GET | `/api/orders/:id` | Bearer | Live order status (derived from time) |
+
+Errors use `{ "error": { "code", "message", "issues?" } }`. Validation issues
+carry a `path` and `message` for form field mapping.
+
+## Screens
+
+Splash, Welcome 1–2, Sign in, Sign up, Choose café, Home, Menu, Item detail,
+Bag, Checkout, Order tracking, Order history, Rewards & profile. All screens
+use semantic color tokens from `src/global.css`; raw hex values are confined to
+illustrations and theme constants.
+
+## Notes
+
+- The order progress is derived from `created_at` and the chosen ETA, so the
+  tracking screen advances naturally without a background job.
+- `COFFEE10` is seeded as a 10% promo. Add more rows to `promos` via a new
+  migration. Promo selection is persisted with the cart, so totals survive a
+  refresh.
+- The UI falls back to the bundled menu/café data when the API is unreachable,
+  showing a small offline notice instead of a blank screen.
+- Favourites are persisted per user; loyalty points/tier/stamps are updated by
+  the API when an order is placed.
+- Payments are **recorded, not charged**: there is no payment gateway
+  integration in this build. Checkout states this explicitly and orders carry a
+  `payment_status` (`pending` / `pay_at_counter`).
+- Not implemented (no credentials/provider configured): email verification,
+  password reset, push/email notifications, roles/permissions, staff fulfilment
+  UI, refunds/cancellation, reports/exports. There are no AI features in this
+  application.

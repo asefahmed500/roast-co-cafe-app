@@ -1,61 +1,118 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { StatusLine, BottomNav, Chip, RoundButton, SectionTitle, ProductCard } from "@/components/kit";
-import { Icon } from "@/components/icons";
+import { StatusLine, BottomNav, Button, Chip, RoundButton, SectionTitle, ProductCard } from "@/components/kit";
 import { Illustration } from "@/components/illustrations";
-import { categories, menuItems } from "@/data/menu";
+import { categories } from "@/data/menu";
+import { useAuth } from "@/context/auth";
+import { useCatalog } from "@/context/catalog";
 import { useCart } from "@/store/cart";
+import { DEFAULT_OPTIONS, optionsLabel } from "../../shared/pricing";
+import type { OrderDTO } from "../../shared/types";
+import { api, errorMessage } from "@/lib/api";
+
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 export function HomeScreen() {
   const [category, setCategory] = useState<string>("All");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [orders, setOrders] = useState<OrderDTO[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { menu, error } = useCatalog();
   const { addItem, count } = useCart();
-  const popular = menuItems.filter((item) => category === "All" || item.category === category).slice(0, 4);
+  const popular = menu.filter((item) => category === "All" || item.category === category).slice(0, 4);
+
+  const toggleNotifications = async () => {
+    if (showNotifications) {
+      setShowNotifications(false);
+      return;
+    }
+    setShowNotifications(true);
+    setNotificationsLoading(true);
+    setNotificationsError(null);
+    try {
+      const result = await api.getOrders();
+      setOrders(result.orders.slice(0, 3));
+    } catch (caught) {
+      setNotificationsError(errorMessage(caught));
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
       <StatusLine />
       <View className="flex-row items-center justify-between px-5 mt-1">
         <View>
-          <Text className="text-[12.5px] text-muted">Good morning</Text>
-          <Text className="text-[19px] font-bold tracking-tight text-ink">Maya</Text>
+          <Text className="text-[12.5px] text-muted">{greeting()}</Text>
+          <Text className="text-[19px] font-bold tracking-tight text-ink">{user?.name.split(" ")[0] ?? "there"}</Text>
         </View>
-        <RoundButton name="bell" onPress={() => {}} />
+        <RoundButton name="bell" onPress={() => void toggleNotifications()} />
       </View>
+
+      {showNotifications ? (
+        <View className="mx-5 mt-3 bg-card rounded-[12px] p-3.5 border border-line">
+          <Text className="text-[13px] font-bold text-ink">Order updates</Text>
+          {notificationsLoading ? (
+            <Text className="text-[12px] text-muted mt-1">Loading…</Text>
+          ) : notificationsError ? (
+            <Text className="text-[12px] text-destructive mt-1">{notificationsError}</Text>
+          ) : orders.length === 0 ? (
+            <Text className="text-[12px] text-muted mt-1">No order updates yet. Place an order to see it here.</Text>
+          ) : (
+            orders.map((order) => (
+              <View key={order.id} className="flex-row items-center justify-between mt-2">
+                <Text className="text-[12px] text-ink">Order #{order.orderNumber}</Text>
+                <Text className="text-[11.5px] font-semibold text-caramel capitalize">{order.status.replace("_", " ")}</Text>
+              </View>
+            ))
+          )}
+        </View>
+      ) : null}
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
         <View className="px-5 mt-3.5">
-          <Pressable
+          <Button
+            label="Search coffee, pastry…"
+            variant="soft"
+            size="lg"
+            fullWidth
+            leftIcon="search"
             onPress={() => router.push("/menu")}
-            accessibilityRole="button"
-            className="bg-card rounded-[16px] h-[46px] flex-row items-center px-4 gap-2.5"
-          >
-            <Icon name="search" size={18} color="#8A7566" />
-            <Text className="text-[13px] text-muted">Search coffee, pastry…</Text>
-          </Pressable>
+          />
         </View>
+
+        {error ? (
+          <View className="px-5 mt-2">
+            <Text className="text-[11.5px] text-destructive">Offline menu — changes will sync when the server is back.</Text>
+          </View>
+        ) : null}
 
         <View className="px-5 mt-3.5">
           <View className="bg-espresso rounded-[24px] h-[124px] p-4 relative overflow-hidden">
             <Text className="text-[10.5px] font-bold text-caramel tracking-[2px]">TODAY ONLY</Text>
             <Text className="text-[21px] font-bold leading-tight text-white mt-1.5">
-              Buy 1 Get 1{"\n"}Iced Latte
+              10% off your order{"\n"}with COFFEE10
             </Text>
-            <Pressable
-              onPress={() => router.push("/item/iced-latte")}
-              accessibilityRole="button"
-              className="self-start bg-caramel rounded-[14px] px-3.5 py-1.5 mt-2.5"
-            >
-              <Text className="text-[12px] font-bold text-white">Order now</Text>
-            </Pressable>
+            <View className="self-start mt-2.5">
+              <Button label="Use code" variant="secondary" size="sm" onPress={() => router.push("/bag")} />
+            </View>
             <View className="absolute right-1 top-2">
               <Illustration name="iced" size={104} />
             </View>
           </View>
         </View>
 
-        <View className="px-5 mt-3.5 flex-row gap-2">
-          {categories.slice(0, 4).map((c) => (
+        <View className="px-5 mt-3.5 flex-row gap-2 flex-wrap">
+          {categories.map((c) => (
             <Chip key={c} label={c} active={category === c} onPress={() => setCategory(c)} />
           ))}
         </View>
@@ -78,7 +135,8 @@ export function HomeScreen() {
                     id: item.id,
                     name: item.name,
                     price: item.price,
-                    note: "Medium · Whole milk",
+                    note: optionsLabel(DEFAULT_OPTIONS),
+                    options: DEFAULT_OPTIONS,
                     illustration: item.illustration,
                     tint: item.tint,
                   })

@@ -3,12 +3,19 @@ import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { StatusLine, Dots } from "@/components/kit";
 import { Illustration } from "@/components/illustrations";
+import { useAuth } from "@/context/auth";
 
 export function SplashScreen() {
+  const { isLoading, isSignedIn } = useAuth();
+
   useEffect(() => {
-    const timer = setTimeout(() => router.replace("/welcome-one"), 1800);
+    if (isLoading) return;
+    const timer = setTimeout(
+      () => router.replace(isSignedIn ? "/home" : "/welcome-one"),
+      900,
+    );
     return () => clearTimeout(timer);
-  }, []);
+  }, [isLoading, isSignedIn]);
 
   return (
     <View className="flex-1 bg-espresso">

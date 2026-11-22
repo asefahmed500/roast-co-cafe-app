@@ -1,7 +1,7 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
-import { StatusLine, Dots, PrimaryButton } from "@/components/kit";
+import { StatusLine, Dots, PrimaryButton, Button } from "@/components/kit";
 import { Illustration } from "@/components/illustrations";
 import type { IllustrationName } from "@/data/menu";
 
@@ -53,9 +53,9 @@ export function WelcomeScreen({ step }: { step: 0 | 1 }) {
 
       <View className="mt-auto px-5 flex-row items-center gap-3.5 pb-8 pt-4">
         {step === 0 ? (
-          <Pressable onPress={() => router.replace("/sign-in")} accessibilityRole="button" className="w-16">
-            <Text className="text-[14px] font-semibold text-muted">Skip</Text>
-          </Pressable>
+          <View className="w-16">
+            <Button label="Skip" variant="ghost" size="md" onPress={() => router.replace("/sign-in")} />
+          </View>
         ) : (
           <View className="w-16" />
         )}

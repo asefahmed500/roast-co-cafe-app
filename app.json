@@ -8,9 +8,13 @@
     "scheme": "roastco",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.roastco.app",
+      "supportsTablet": false,
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.roastco.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -21,6 +25,9 @@
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "https://roast-co-api.<your-account>.workers.dev"
     },
     "plugins": [
       "expo-router",

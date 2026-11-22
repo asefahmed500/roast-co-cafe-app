@@ -1,10 +1,16 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, usePathname } from "expo-router";
-import { Icon, type IconName } from "@/components/icons";
+import type { IconName } from "@/components/icons";
 import { Illustration } from "@/components/illustrations";
 import type { IllustrationName } from "@/data/menu";
+import { Button, IconButton, PressableSurface, SecondaryButton } from "@/components/button";
+import { a11yState } from "@/components/a11y";
+
+export { Button, IconButton, PressableSurface, SecondaryButton } from "@/components/button";
+export type { ButtonProps, ButtonSize, ButtonVariant, IconButtonProps } from "@/components/button";
+export { a11yState } from "@/components/a11y";
 
 /* ---------- Layout ---------- */
 
@@ -92,18 +98,16 @@ export function RoundButton({
   size?: number;
   tone?: "light" | "caramel" | "outline";
 }) {
-  const bg = tone === "caramel" ? "bg-caramel" : tone === "outline" ? "bg-transparent border border-line" : "bg-card";
-  const stroke = tone === "caramel" ? "#FFFFFF" : "#2B1D16";
+  const variant = tone === "caramel" ? "secondary" : tone === "outline" ? "outline" : "soft";
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={name}
+    <IconButton
+      name={name}
       onPress={onPress}
-      style={({ pressed }) => ({ width: size, height: size, opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}
-      className={`rounded-full items-center justify-center ${bg}`}
-    >
-      <Icon name={name} size={size * 0.5} color={stroke} />
-    </Pressable>
+      accessibilityLabel={name}
+      variant={variant}
+      size={size >= 46 ? "lg" : "md"}
+      style={{ width: size, height: size }}
+    />
   );
 }
 
@@ -124,21 +128,22 @@ export function BottomNav({ active, count = 0 }: { active: keyof typeof tabRoute
         const tab = tabRoutes[key];
         const isActive = active === key;
         return (
-          <Pressable
-            key={key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            onPress={() => router.push(tab.href as never)}
-            style={({ pressed }) => ({ width: 50, height: 44, opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}
-            className={`rounded-2xl items-center justify-center ${isActive ? "bg-caramel-tint" : ""}`}
-          >
-            <Icon name={tab.icon} size={22} color={isActive ? "#C8873F" : "#B09A85"} />
+          <View key={key} className="relative">
+            <IconButton
+              name={tab.icon}
+              role="tab"
+              active={isActive}
+              variant="ghost"
+              onPress={() => router.push(tab.href as never)}
+              accessibilityLabel={key}
+              style={{ width: 50, height: 44 }}
+            />
             {key === "bag" && count > 0 ? (
               <View className="absolute -top-1 right-1 bg-caramel rounded-full w-[17px] h-[17px] items-center justify-center">
                 <Text className="text-white text-[10px] font-bold">{count}</Text>
               </View>
             ) : null}
-          </Pressable>
+          </View>
         );
       })}
     </View>
@@ -157,14 +162,13 @@ export function Chip({
   onPress?: () => void;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      label={label}
+      variant={active ? "primary" : "outline"}
+      size="sm"
+      selected={active}
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.95 : 1 }] })}
-      className={`px-4 py-2 rounded-full ${active ? "bg-espresso" : "bg-card border border-line"}`}
-    >
-      <Text className={`text-[12.5px] font-semibold ${active ? "text-white" : "text-ink"}`}>{label}</Text>
-    </Pressable>
+    />
   );
 }
 
@@ -180,15 +184,15 @@ export function Pill({
   className?: string;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
+    <Button
+      label={label}
+      variant={active ? "primary" : "outline"}
+      size="sm"
+      fullWidth
+      selected={active}
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.96 : 1 }] })}
-      className={`flex-1 py-2.5 rounded-xl ${active ? "bg-espresso" : "bg-card border border-line"} ${className}`}
-    >
-      <Text className={`text-center text-[12.5px] font-semibold ${active ? "text-white" : "text-ink"}`}>{label}</Text>
-    </Pressable>
+      className={className}
+    />
   );
 }
 
@@ -197,24 +201,28 @@ export function PrimaryButton({
   onPress,
   variant = "dark",
   className = "",
+  disabled = false,
+  loading = false,
 }: {
   label: string;
   onPress?: () => void;
   variant?: "dark" | "caramel" | "outline";
   className?: string;
+  disabled?: boolean;
+  loading?: boolean;
 }) {
-  const bg = variant === "caramel" ? "bg-caramel" : variant === "outline" ? "bg-transparent border border-line" : "bg-espresso";
-  const text = variant === "outline" ? "text-ink" : "text-white";
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      label={label}
+      variant={variant === "caramel" ? "secondary" : variant === "outline" ? "outline" : "primary"}
+      size="lg"
+      fullWidth
+      disabled={disabled}
+      loading={loading}
+      rightIcon={variant === "outline" ? undefined : "chev"}
+      className={className}
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] })}
-      className={`h-[52px] rounded-full items-center justify-center flex-row gap-2 ${bg} ${className}`}
-    >
-      <Text className={`text-[15px] font-semibold ${text}`}>{label}</Text>
-      {variant !== "outline" ? <Icon name="chev" size={17} color="#FFFFFF" /> : null}
-    </Pressable>
+    />
   );
 }
 
@@ -230,25 +238,24 @@ export function Stepper({
   const size = compact ? 26 : 32;
   return (
     <View className="flex-row items-center gap-3">
-      <Pressable
-        accessibilityRole="button"
+      <IconButton
+        name="minus"
         accessibilityLabel="Decrease quantity"
+        variant="outline"
+        size="sm"
         onPress={() => onChange(value - 1)}
-        style={({ pressed }) => ({ width: size, height: size, opacity: pressed ? 0.6 : 1 })}
-        className="rounded-full border border-line items-center justify-center"
-      >
-        <Icon name="minus" size={13} color="#8A7566" />
-      </Pressable>
+        style={{ width: size, height: size }}
+      />
       <Text className="text-[15px] font-bold min-w-[14px] text-center">{value}</Text>
-      <Pressable
-        accessibilityRole="button"
+      <IconButton
+        name="plus"
         accessibilityLabel="Increase quantity"
+        variant="secondary"
+        size="sm"
+        disabled={value >= 99}
         onPress={() => onChange(value + 1)}
-        style={({ pressed }) => ({ width: size, height: size, opacity: pressed ? 0.6 : 1 })}
-        className="rounded-full bg-caramel items-center justify-center"
-      >
-        <Icon name="plus" size={13} color="#FFFFFF" />
-      </Pressable>
+        style={{ width: size, height: size }}
+      />
     </View>
   );
 }
@@ -267,11 +274,7 @@ export function SectionTitle({ title, action, onAction }: { title: string; actio
   return (
     <View className="flex-row items-center justify-between">
       <Text className="text-[16px] font-bold">{title}</Text>
-      {action ? (
-        <Pressable onPress={onAction} accessibilityRole="button">
-          <Text className="text-[12.5px] font-semibold text-caramel">{action}</Text>
-        </Pressable>
-      ) : null}
+      {action ? <Button label={action} variant="link" size="sm" onPress={onAction} /> : null}
     </View>
   );
 }
@@ -295,27 +298,23 @@ export function ProductCard({
 }) {
   return (
     <View className="flex-1 bg-card rounded-[20px] p-2.5">
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-      >
-        <View style={{ backgroundColor: tint }} className="h-[92px] rounded-[15px] items-center justify-center">
+      <PressableSurface onPress={onPress} accessibilityLabel={name}>
+        <View style={{ backgroundColor: tint }} className="h-[92px] rounded-[12px] items-center justify-center">
           <Illustration name={art} size={74} />
         </View>
         <Text className="font-bold text-[13.5px] mt-2">{name}</Text>
-      </Pressable>
+      </PressableSurface>
       <View className="flex-row items-center justify-between mt-1">
         <Text className="text-[14px] font-bold">৳{price}</Text>
-        <Pressable
-          onPress={onAdd}
-          accessibilityRole="button"
+        <IconButton
+          name="plus"
           accessibilityLabel={`Add ${name}`}
+          variant="secondary"
+          size="sm"
           hitSlop={6}
-          className="bg-caramel rounded-full w-[26px] h-[26px] items-center justify-center"
-        >
-          <Icon name="plus" size={14} color="#FFFFFF" />
-        </Pressable>
+          onPress={onAdd}
+          style={{ width: 30, height: 30 }}
+        />
       </View>
     </View>
   );
@@ -340,12 +339,7 @@ export function MenuRow({
 }) {
   return (
     <View className="bg-card rounded-[20px] flex-row items-center p-2.5">
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-        className="flex-1 flex-row items-center"
-      >
+      <PressableSurface onPress={onPress} accessibilityLabel={name} className="flex-1 flex-row items-center">
         <View style={{ backgroundColor: tint }} className="w-14 h-14 rounded-2xl items-center justify-center">
           <Illustration name={art} size={44} />
         </View>
@@ -354,20 +348,107 @@ export function MenuRow({
           <Text className="text-[11.5px] text-muted mt-0.5">{description}</Text>
           <Text className="text-[14px] font-bold mt-1">৳{price}</Text>
         </View>
-      </Pressable>
-      <Pressable
-        onPress={onAdd}
-        accessibilityRole="button"
+      </PressableSurface>
+      <IconButton
+        name="plus"
         accessibilityLabel={`Add ${name}`}
+        variant="secondary"
+        size="sm"
         hitSlop={6}
-        className="bg-caramel rounded-full w-7 h-7 items-center justify-center ml-2"
-      >
-        <Icon name="plus" size={15} color="#FFFFFF" />
-      </Pressable>
+        onPress={onAdd}
+        style={{ width: 34, height: 34, marginLeft: 8 }}
+      />
     </View>
   );
 }
 
 export function Divider() {
   return <View className="h-px bg-line my-1" />;
+}
+
+/* ---------- Forms & states ---------- */
+
+export function TextField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  error,
+  secure = false,
+  keyboardType = "default",
+  autoCapitalize = "none",
+  onSubmitEditing,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder?: string;
+  error?: string;
+  secure?: boolean;
+  keyboardType?: "default" | "email-address";
+  autoCapitalize?: "none" | "words" | "sentences";
+  onSubmitEditing?: () => void;
+}) {
+  return (
+    <View className="mb-3">
+      <Text className="text-[13px] font-bold mb-2 text-ink">{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#B09A85"
+        secureTextEntry={secure}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        onSubmitEditing={onSubmitEditing}
+        accessibilityLabel={label}
+        className={`bg-card rounded-[18px] h-[52px] px-4 text-[15px] text-ink border ${error ? "border-destructive" : "border-line"}`}
+      />
+      {error ? <Text className="text-[12px] text-destructive mt-1">{error}</Text> : null}
+    </View>
+  );
+}
+
+export function FormMessage({ message, tone = "error" }: { message: string | null; tone?: "error" | "success" }) {
+  if (!message) return null;
+  return (
+    <View className={`rounded-2xl px-4 py-3 mt-2 ${tone === "error" ? "bg-destructive/10" : "bg-sage/15"}`}>
+      <Text className={`text-[13px] font-semibold ${tone === "error" ? "text-destructive" : "text-sage"}`}>{message}</Text>
+    </View>
+  );
+}
+
+export function LoadingView({ label = "Loading…" }: { label?: string }) {
+  return (
+    <View className="flex-1 items-center justify-center gap-3" accessibilityRole="progressbar">
+      <ActivityIndicator size="large" color="#C8873F" />
+      <Text className="text-[13px] text-muted">{label}</Text>
+    </View>
+  );
+}
+
+export function ErrorView({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <View className="flex-1 items-center justify-center px-8 gap-3">
+      <Text className="text-[17px] font-bold text-ink text-center">Something went wrong</Text>
+      <Text className="text-[13px] text-muted text-center">{message}</Text>
+      {onRetry ? (
+        <Button label="Try again" variant="primary" size="md" onPress={onRetry} className="mt-2 min-w-[160px]" />
+      ) : null}
+    </View>
+  );
+}
+
+export function EmptyView({ title, message, action, onAction }: { title: string; message: string; action?: string; onAction?: () => void }) {
+  return (
+    <View className="flex-1 items-center justify-center px-10 gap-2">
+      <Illustration name="cup" size={72} />
+      <Text className="text-[17px] font-bold text-ink text-center mt-2">{title}</Text>
+      <Text className="text-[13px] text-muted text-center">{message}</Text>
+      {action ? (
+        <Button label={action} variant="secondary" size="md" onPress={onAction} className="mt-3 min-w-[180px]" />
+      ) : null}
+    </View>
+  );
 }

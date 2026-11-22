@@ -1,20 +1,44 @@
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { router } from "expo-router";
-import { StatusLine, TopBar, RoundButton, PrimaryButton } from "@/components/kit";
+import { Text, TextInput, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { StatusLine, TopBar, RoundButton, PrimaryButton, EmptyView, PressableSurface, a11yState } from "@/components/kit";
 import { Icon } from "@/components/icons";
-import { cafes } from "@/data/menu";
+import { useCafe } from "@/context/cafe";
+import { useCatalog } from "@/context/catalog";
 
 export function ChooseCafeScreen() {
-  const [selected, setSelected] = useState(cafes[0].id);
+  const { return: returnTo } = useLocalSearchParams<{ return?: string }>();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const { cafes } = useCatalog();
+  const { selectedCafe, selectCafe } = useCafe();
+  const selected = selectedCafe?.id ?? cafes[0]?.id;
+  const needle = query.trim().toLowerCase();
+  const visibleCafes = cafes.filter((cafe) =>
+    !needle || `${cafe.name} ${cafe.address}`.toLowerCase().includes(needle),
+  );
 
   return (
     <View className="flex-1 bg-background">
       <StatusLine />
       <TopBar
         title="Pick your café"
-        right={<RoundButton name="search" size={38} onPress={() => {}} />}
+        right={<RoundButton name="search" size={38} onPress={() => setSearchOpen((open) => !open)} />}
       />
+
+      {searchOpen ? (
+        <View className="px-5 mt-3">
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search cafés…"
+            placeholderTextColor="#B09A85"
+            accessibilityLabel="Search cafés"
+            autoFocus
+            className="bg-card rounded-2xl h-11 px-4 text-[14px] text-ink border border-line"
+          />
+        </View>
+      ) : null}
 
       <View className="mx-5 mt-3 h-[196px] rounded-[24px] overflow-hidden relative bg-[#E8DFCC]">
         <View className="absolute -left-2 top-[60px] w-[340px] h-[14px] bg-white/55 rotate-[-8deg]" />
@@ -25,36 +49,48 @@ export function ChooseCafeScreen() {
         <MapPin left={196} top={128} small />
       </View>
 
-      <View className="px-5 mt-4 gap-2.5">
-        {cafes.map((cafe) => {
-          const active = cafe.id === selected;
-          return (
-            <Pressable
-              key={cafe.id}
-              onPress={() => setSelected(cafe.id)}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: active }}
-              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
-              className={`bg-card rounded-[20px] flex-row items-center px-3.5 py-3 ${active ? "border-2 border-caramel" : "border border-line"}`}
-            >
-              <View
-                style={{ backgroundColor: active ? "#F6E8D3" : cafe.tint }}
-                className={`w-10 h-10 rounded-full items-center justify-center ${active ? "text-caramel" : ""}`}
+      {visibleCafes.length === 0 ? (
+        <EmptyView
+          title="No matching cafés"
+          message="Try another name or clear your search."
+          action="Clear search"
+          onAction={() => setQuery("")}
+        />
+      ) : (
+        <View className="px-5 mt-4 gap-2.5">
+          {visibleCafes.map((cafe) => {
+            const active = cafe.id === selected;
+            return (
+              <PressableSurface
+                key={cafe.id}
+                onPress={() => selectCafe(cafe.id)}
+                accessibilityRole="radio"
+                accessibilityLabel={`${cafe.name}, ${cafe.address}`}
+                {...a11yState(active)}
+                className={`bg-card rounded-[12px] flex-row items-center px-3.5 py-3 ${active ? "border-2 border-caramel" : "border border-line"}`}
               >
-                <Icon name="pin" size={20} color={active ? "#C8873F" : "#2B1D16"} />
-              </View>
-              <View className="flex-1 ml-3">
-                <Text className="font-bold text-[14px]">{cafe.name}</Text>
-                <Text className="text-[11.5px] text-muted mt-0.5">{cafe.address}</Text>
-              </View>
-              <Text className="text-[12.5px] font-bold">{cafe.distance}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+                <View
+                  style={{ backgroundColor: active ? "#F6E8D3" : cafe.tint }}
+                  className="w-10 h-10 rounded-full items-center justify-center"
+                >
+                  <Icon name="pin" size={20} color={active ? "#C8873F" : "#2B1D16"} />
+                </View>
+                <View className="flex-1 ml-3">
+                  <Text className="font-bold text-[14px]">{cafe.name}</Text>
+                  <Text className="text-[11.5px] text-muted mt-0.5">{cafe.address}</Text>
+                </View>
+                <Text className="text-[12.5px] font-bold">{cafe.distance}</Text>
+              </PressableSurface>
+            );
+          })}
+        </View>
+      )}
 
       <View className="mt-auto px-5 pb-8 pt-4">
-        <PrimaryButton label="Confirm café" onPress={() => router.replace("/home")} />
+        <PrimaryButton
+          label="Confirm café"
+          onPress={() => router.replace((returnTo === "/checkout" ? "/checkout" : "/home") as never)}
+        />
       </View>
     </View>
   );
