@@ -66,6 +66,29 @@ test("favourites persist across navigation", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Caramel Latte", exact: true })).toBeVisible();
 });
 
+test("demo account opens all screens with seeded data and Geist typography", async ({ page }) => {
+  await page.goto("/sign-in", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Explore demo account" }).click();
+  await expect(page.getByRole("tab", { name: "home" })).toBeVisible();
+
+  const font = await page.evaluate(() => {
+    const el = document.querySelector('[dir="auto"]');
+    return el ? getComputedStyle(el).fontFamily : "";
+  });
+  expect(font).toContain("Geist");
+
+  await page.getByRole("tab", { name: "bag" }).click();
+  await expect(page.getByText("Your bag (3)")).toBeVisible();
+  await expect(page.getByText("COFFEE10 · 10% off")).toBeVisible();
+
+  await page.goto("/profile", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Favourites" }).click();
+  await expect(page.getByRole("button", { name: "Caramel Latte", exact: true })).toBeVisible();
+
+  await page.goto("/order-history", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText(/Order #\d+/).first()).toBeVisible();
+});
+
 test("button loading and disabled states are exposed", async ({ page }) => {
   await page.goto("/sign-in", { waitUntil: "domcontentloaded" });
   const submit = page.getByRole("button", { name: "Sign in" });

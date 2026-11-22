@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, Dots } from "@/components/kit";
 import { Illustration } from "@/components/illustrations";

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/typography";
 import Svg, { Circle } from "react-native-svg";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusLine, TopBar, ErrorView, LoadingView, Button } from "@/components/kit";

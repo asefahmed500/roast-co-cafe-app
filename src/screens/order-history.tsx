@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, TopBar, EmptyView, ErrorView, LoadingView, PressableSurface } from "@/components/kit";
 import type { OrderDTO } from "../../shared/types";

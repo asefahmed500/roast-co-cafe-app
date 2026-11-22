@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { View } from "react-native";
+import { Text, TextInput } from "@/components/typography";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusLine, TopBar, RoundButton, PrimaryButton, EmptyView, PressableSurface, a11yState } from "@/components/kit";
 import { Icon } from "@/components/icons";

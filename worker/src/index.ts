@@ -7,6 +7,7 @@ import type {
   CafeDTO,
   CartDTO,
   CartLineInput,
+  DemoResponse,
   MenuItemDTO,
   OrderDTO,
   PromoDTO,
@@ -23,6 +24,13 @@ type Variables = { user: UserRow | null };
 type AppEnv = { Bindings: CloudflareBindings; Variables: Variables };
 
 const app = new Hono<AppEnv>();
+
+const DEMO_EMAIL = "demo@roastco.app";
+const DEMO_FAVORITES = ["caramel-latte", "butter-croissant"];
+const DEMO_CART: CartLineInput[] = [
+  { id: "caramel-latte", qty: 2, note: "M · Whole milk", options: { size: "M", milk: "Whole" } },
+  { id: "butter-croissant", qty: 1, note: "Warmed", options: { size: "M", milk: "Whole" } },
+];
 
 const toUserDTO = (user: UserRow): UserDTO => ({
   id: user.id,
@@ -132,6 +140,36 @@ app.post("/api/auth/login", async (c) => {
 
   const token = await createSession(c.env.DB, user.id, Number(c.env.SESSION_TTL_DAYS ?? 7));
   return c.json<AuthResponse>({ token, user: toUserDTO(user) });
+});
+
+/** One-click demo session with a stocked cart, favourites and an order. */
+app.post("/api/auth/demo", async (c) => {
+  if (c.env.DEMO_ENABLED !== "true") throw errors.notFound("Demo access is disabled");
+  if (!(await allow(c.env.DB, `demo:${clientIp(c)}`, 20, 900_000))) throw errors.tooMany();
+
+  const user = await first<UserRow>(c.env.DB, "SELECT * FROM users WHERE email = ?", [DEMO_EMAIL]);
+  if (!user) throw errors.notFound("Demo account is not available");
+
+  // Reset demo state so every visit starts from the same complete showcase.
+  await run(
+    c.env.DB,
+    `INSERT INTO carts (user_id, data, promo_code, updated_at) VALUES (?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, promo_code = excluded.promo_code, updated_at = excluded.updated_at`,
+    [user.id, JSON.stringify(DEMO_CART), "COFFEE10", new Date().toISOString()],
+  );
+  const order = await first<{ id: string }>(
+    c.env.DB,
+    "SELECT id FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+    [user.id],
+  );
+
+  const token = await createSession(c.env.DB, user.id, Number(c.env.SESSION_TTL_DAYS ?? 7));
+  return c.json<DemoResponse>({
+    token,
+    user: toUserDTO(user),
+    favorites: DEMO_FAVORITES,
+    featuredOrderId: order?.id ?? "demo-order-1",
+  });
 });
 
 app.get("/api/auth/me", requireAuth, (c) =>

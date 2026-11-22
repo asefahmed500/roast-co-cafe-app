@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/typography";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusLine, RoundButton, Pill, Stepper, Button } from "@/components/kit";
 import { Icon } from "@/components/icons";

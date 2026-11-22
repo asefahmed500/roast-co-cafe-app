@@ -1,5 +1,6 @@
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, TopBar, EmptyView, MenuRow } from "@/components/kit";
 import { useCatalog } from "@/context/catalog";

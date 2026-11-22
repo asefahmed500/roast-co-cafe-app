@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/geist": "^0.4.2",
     "@expo/html-elements": "^0.12.5",
     "@expo/ui": "~58.0.29",
     "@gluestack-ui/core": "^5.0.0-alpha.0",

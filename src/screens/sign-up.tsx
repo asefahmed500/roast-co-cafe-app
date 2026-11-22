@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { registerSchema } from "../../shared/validation";
 import { StatusLine, TopBar, PrimaryButton, TextField, FormMessage, Button } from "@/components/kit";

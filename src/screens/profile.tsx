@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, BottomNav, FormMessage, Button, PressableSurface } from "@/components/kit";
 import { Icon, type IconName } from "@/components/icons";

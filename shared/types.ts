@@ -105,6 +105,11 @@ export type AuthResponse = {
   user: UserDTO;
 };
 
+export type DemoResponse = AuthResponse & {
+  favorites: string[];
+  featuredOrderId: string;
+};
+
 export type ApiErrorBody = {
   error: {
     code: string;

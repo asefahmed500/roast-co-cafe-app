@@ -48,12 +48,33 @@ For a physical device set `EXPO_PUBLIC_API_URL` in `.env` to your machine's LAN
 address (`http://192.168.x.x:8787`) and allow port 8787 through your firewall.
 The Android emulator uses `http://10.0.2.2:8787`.
 
+## Demo account
+
+On the Sign in screen, tap **Explore demo account**. It signs you into a seeded
+user with a stocked cart (`COFFEE10` applied), two favourites, an existing order
+in Order history, and Gold-tier loyalty data — so every screen can be visited
+without signing up.
+
+- Email: `demo@roastco.app`
+- Password: `Demo12345!`
+
+The demo user is created by migration `0003_demo.sql`. The one-click endpoint
+`POST /api/auth/demo` is enabled by `DEMO_ENABLED` in `wrangler.jsonc` (true
+locally and in staging, false in production). It resets the demo cart on every
+visit so the showcase is consistent.
+
+## Typography
+
+All text uses **Geist** via `@expo-google-fonts/geist` and `expo-font`, loaded in
+`src/app/_layout.tsx` and applied through the shared `Text` / `TextInput`
+wrappers in `src/components/typography.tsx` (weights 400/500/600/700).
+
 ## Quality checks
 
 ```bash
 npm run typecheck   # TypeScript across app + Worker + tests
-npm test            # 11 Workers-runtime integration tests (Vitest plugin)
-npm run test:e2e    # builds web bundle + 10 Playwright E2E tests (Chrome)
+npm test            # 12 Workers-runtime integration tests (Vitest plugin)
+npm run test:e2e    # builds web bundle + 11 Playwright E2E tests (Chrome)
 npm run web:export  # production web bundle
 ```
 

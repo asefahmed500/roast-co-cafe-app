@@ -1,12 +1,14 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { UserDTO } from "../../shared/types";
 import { ApiRequestError, api, getAuthToken, initToken, setAuthToken } from "@/lib/api";
+import { writeFavorites } from "@/lib/storage";
 
 type AuthContextValue = {
   user: UserDTO | null;
   isLoading: boolean;
   isSignedIn: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInDemo: () => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -55,6 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   }, []);
 
+  const signInDemo = useCallback(async () => {
+    const result = await api.demoLogin();
+    await writeFavorites(result.user.id, result.favorites);
+    setAuthToken(result.token);
+    setUser(result.user);
+  }, []);
+
   const signUp = useCallback(async (name: string, email: string, password: string) => {
     const result = await api.register({ name, email, password });
     setAuthToken(result.token);
@@ -68,8 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isLoading, isSignedIn: user !== null, signIn, signUp, signOut, refresh }),
-    [user, isLoading, signIn, signUp, signOut, refresh],
+    () => ({ user, isLoading, isSignedIn: user !== null, signIn, signInDemo, signUp, signOut, refresh }),
+    [user, isLoading, signIn, signInDemo, signUp, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
-import { Animated, ActivityIndicator, Platform, Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, ActivityIndicator, Platform, Pressable, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "@/components/typography";
 import { Icon, type IconName } from "@/components/icons";
 import { a11yState } from "@/components/a11y";
 import { brand } from "@/theme";

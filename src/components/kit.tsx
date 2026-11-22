@@ -1,5 +1,6 @@
 import React from "react";
-import { ActivityIndicator, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+import { Text, TextInput } from "@/components/typography";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, usePathname } from "expo-router";
 import type { IconName } from "@/components/icons";

@@ -1,6 +1,6 @@
 import { exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { AuthResponse, CartDTO, OrderDTO } from "../../shared/types";
+import type { AuthResponse, CartDTO, DemoResponse, OrderDTO } from "../../shared/types";
 
 const worker = exports.default as unknown as {
   fetch: (request: Request) => Promise<Response>;
@@ -263,6 +263,24 @@ describe("Roast & Co. API", () => {
     const me = await api<{ user: { points: number; coffeeStamps: number } }>("/api/auth/me", { token });
     expect(me.data.user.points).toBeGreaterThan(user.points);
     expect(me.data.user.coffeeStamps).toBe(1);
+  });
+
+  it("supports a seeded demo login with cart, favourites and an order", async () => {
+    const demo = await api<DemoResponse>("/api/auth/demo", { method: "POST" });
+    expect(demo.status).toBe(200);
+    expect(demo.data.user.email).toBe("demo@roastco.app");
+    expect(demo.data.favorites).toContain("caramel-latte");
+    expect(demo.data.featuredOrderId).toBeTruthy();
+
+    const cart = await api<CartDTO>("/api/cart", { token: demo.data.token });
+    expect(cart.data.lines).toHaveLength(2);
+    expect(cart.data.promoCode).toBe("COFFEE10");
+
+    const login = await api<AuthResponse>("/api/auth/login", {
+      method: "POST",
+      body: { email: "demo@roastco.app", password: "Demo12345!" },
+    });
+    expect(login.status).toBe(200);
   });
 
   it("logs out and invalidates the session", async () => {

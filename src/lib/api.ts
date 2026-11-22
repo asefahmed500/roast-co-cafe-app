@@ -1,4 +1,4 @@
-import type { ApiErrorBody, AuthResponse, CafeDTO, CartDTO, CartLineInput, CreateOrderInput, MenuItemDTO, OrderDTO, PromoDTO, UserDTO } from "../../shared/types";
+import type { ApiErrorBody, AuthResponse, CafeDTO, CartDTO, CartLineInput, CreateOrderInput, DemoResponse, MenuItemDTO, OrderDTO, PromoDTO, UserDTO } from "../../shared/types";
 import { API_URL } from "./config";
 import { readToken, writeToken } from "./storage";
 
@@ -76,6 +76,8 @@ export const api = {
     request<AuthResponse>("/api/auth/login", { method: "POST", body: input, public: true }),
 
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+
+  demoLogin: () => request<DemoResponse>("/api/auth/demo", { method: "POST", public: true }),
 
   me: () => request<{ user: UserDTO }>("/api/auth/me"),
 

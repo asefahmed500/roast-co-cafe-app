@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { loginSchema } from "../../shared/validation";
 import { StatusLine, TopBar, PrimaryButton, TextField, FormMessage, Button } from "@/components/kit";
@@ -8,12 +9,27 @@ import { useAuth } from "@/context/auth";
 import { errorMessage } from "@/lib/api";
 
 export function SignInScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInDemo } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
+
+  const enterDemo = async () => {
+    setDemoBusy(true);
+    setDemoError(null);
+    try {
+      await signInDemo();
+      router.replace("/home");
+    } catch (error) {
+      setDemoError(errorMessage(error));
+    } finally {
+      setDemoBusy(false);
+    }
+  };
 
   const submit = async () => {
     const parsed = loginSchema.safeParse({ email, password });
@@ -70,6 +86,21 @@ export function SignInScreen() {
 
         <FormMessage message={message} />
         <PrimaryButton label="Sign in" onPress={() => void submit()} loading={busy} className="mt-5" />
+
+        <View className="mt-3">
+          <Button
+            label="Explore demo account"
+            variant="outline"
+            size="md"
+            fullWidth
+            loading={demoBusy}
+            onPress={() => void enterDemo()}
+          />
+        </View>
+        <Text className="text-[11px] text-muted text-center mt-2">
+          Preloaded cart, favourites and an order — no signup needed.
+        </Text>
+        <FormMessage message={demoError} />
 
         <View className="flex-row items-center justify-center mt-5 gap-1">
           <Text className="text-[13px] text-muted">New to Roast &amp; Co.?</Text>

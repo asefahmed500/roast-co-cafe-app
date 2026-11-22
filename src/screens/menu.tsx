@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { RefreshControl, ScrollView, Text, TextInput, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
+import { Text, TextInput } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, BottomNav, Chip, RoundButton, MenuRow, EmptyView } from "@/components/kit";
 import type { Category } from "@/data/menu";
