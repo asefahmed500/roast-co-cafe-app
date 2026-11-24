@@ -22,6 +22,7 @@ const Text = React.forwardRef<React.ComponentRef<'span'>, ITextProps>(
   ) {
     return (
       <span
+        dir="auto"
         className={textStyle({
           isTruncated: isTruncated as boolean,
           bold: bold as boolean,

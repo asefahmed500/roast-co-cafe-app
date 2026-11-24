@@ -1,5 +1,6 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { Box } from "@/components/ui/box";
+import { FlatList } from "@/components/ui/flat-list";
 import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, TopBar, EmptyView, MenuRow } from "@/components/kit";
@@ -15,7 +16,7 @@ export function FavoritesScreen() {
   const items = menu.filter((item) => ids.includes(item.id));
 
   return (
-    <View className="flex-1 bg-background">
+    <Box className="flex-1 bg-background">
       <StatusLine />
       <TopBar title="Favourites" />
 
@@ -27,12 +28,16 @@ export function FavoritesScreen() {
           onAction={() => router.replace("/menu")}
         />
       ) : (
-        <ScrollView className="flex-1 mt-3.5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-          <Text className="text-[12.5px] text-muted mb-3">Saved for your next visit</Text>
-          <View className="gap-2.5">
-            {items.map((item) => (
+        <Box className="flex-1 mt-3.5">
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
+            ListHeaderComponent={<Text className="text-[12.5px] text-muted mb-3">Saved for your next visit</Text>}
+            ItemSeparatorComponent={() => <Box className="h-2.5" />}
+            renderItem={({ item }) => (
               <MenuRow
-                key={item.id}
                 name={item.name}
                 description={item.description}
                 price={item.price}
@@ -49,10 +54,10 @@ export function FavoritesScreen() {
                   tint: item.tint,
                 })}
               />
-            ))}
-          </View>
-        </ScrollView>
+            )}
+          />
+        </Box>
       )}
-    </View>
+    </Box>
   );
 }

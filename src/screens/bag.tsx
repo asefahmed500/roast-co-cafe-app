@@ -1,10 +1,14 @@
 import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
-import { Text, TextInput } from "@/components/typography";
+import { Box } from "@/components/ui/box";
+import { FlatList } from "@/components/ui/flat-list";
+import { Input, InputField } from "@/components/ui/input";
+import { KeyboardAvoidingView } from "@/components/ui/keyboard-avoiding-view";
+import { Text } from "@/components/typography";
 import { router } from "expo-router";
-import { StatusLine, TopBar, Stepper, PrimaryButton, Divider, EmptyView, FormMessage, Button } from "@/components/kit";
+import { StatusLine, TopBar, Stepper, PrimaryButton, Divider, EmptyView, FormMessage, Button, tintClass } from "@/components/kit";
 import { Icon } from "@/components/icons";
 import { Illustration } from "@/components/illustrations";
+import { brand } from "@/theme";
 import { useCart } from "@/store/cart";
 
 export function BagScreen() {
@@ -25,85 +29,99 @@ export function BagScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <StatusLine />
-      <TopBar title={`Your bag (${count})`} />
+    <KeyboardAvoidingView className="flex-1">
+      <Box className="flex-1 bg-background">
+        <StatusLine />
+        <TopBar title={`Your bag (${count})`} />
 
-      {lines.length === 0 ? (
-        <EmptyView
-          title="Your bag is empty"
-          message="Add something delicious from the menu and it will show up here."
-          action="Browse menu"
-          onAction={() => router.push("/menu")}
-        />
-      ) : (
-        <>
-          <ScrollView className="flex-1 mt-3.5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-            <View className="gap-2.5">
-              {lines.map((line) => (
-                <View key={line.id} className="bg-card rounded-[20px] flex-row items-center p-2.5">
-                  <View style={{ backgroundColor: line.tint }} className="w-11 h-11 rounded-2xl items-center justify-center">
-                    <Illustration name={line.illustration} size={36} />
-                  </View>
-                  <View className="flex-1 ml-3">
-                    <Text className="font-bold text-[14px]">{line.name}</Text>
-                    <Text className="text-[11.5px] text-muted mt-0.5">{line.note}</Text>
-                    <Text className="text-[14px] font-bold mt-1">৳{line.price * line.qty}</Text>
-                  </View>
-                  <Stepper value={line.qty} onChange={(next) => setQty(line.id, next)} compact />
-                </View>
-              ))}
-
-              <View className="rounded-2xl border border-dashed border-[#D8C4A4] p-3">
-                {promoApplied ? (
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-2.5">
-                      <Icon name="card" size={16} color="#C8873F" />
-                      <Text className="text-[13px] font-bold text-caramel">{promoCode} · {promoPercentLabel(discount, subtotal)} off</Text>
-                    </View>
-                    <Button label="Remove" variant="link" size="sm" onPress={removePromo} />
-                  </View>
-                ) : (
-                  <View className="flex-row items-center gap-2">
-                    <TextInput
-                      value={code}
-                      onChangeText={setCode}
-                      placeholder="Promo code"
-                      autoCapitalize="characters"
-                      accessibilityLabel="Promo code"
-                      className="flex-1 h-10 px-3 text-[13px] font-bold text-caramel"
-                    />
-                    <Button
-                      label="Apply"
-                      variant="secondary"
-                      size="sm"
-                      loading={applying}
-                      disabled={code.trim().length === 0}
-                      onPress={() => void onApplyPromo()}
-                    />
-                  </View>
+        {lines.length === 0 ? (
+          <EmptyView
+            title="Your bag is empty"
+            message="Add something delicious from the menu and it will show up here."
+            action="Browse menu"
+            onAction={() => router.push("/menu")}
+          />
+        ) : (
+          <>
+            <Box className="flex-1 mt-3.5">
+              <FlatList
+                data={lines}
+                keyExtractor={(line) => line.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
+                ItemSeparatorComponent={() => <Box className="h-2.5" />}
+                renderItem={({ item: line }) => (
+                  <Box className="bg-card rounded-[20px] flex-row items-center p-2.5">
+                    <Box className={`w-11 h-11 rounded-2xl items-center justify-center ${tintClass(line.tint)}`}>
+                      <Illustration name={line.illustration} size={36} />
+                    </Box>
+                    <Box className="flex-1 ml-3">
+                      <Text className="font-bold text-[14px]">{line.name}</Text>
+                      <Text className="text-[11.5px] text-muted mt-0.5">{line.note}</Text>
+                      <Text className="text-[14px] font-bold mt-1">৳{line.price * line.qty}</Text>
+                    </Box>
+                    <Stepper value={line.qty} onChange={(next) => setQty(line.id, next)} compact />
+                  </Box>
                 )}
-                <FormMessage message={promoError} />
-              </View>
-            </View>
+                ListFooterComponent={
+                  <>
+                    <Box className="rounded-2xl border border-dashed border-line-strong p-3 mt-2.5">
+                      {promoApplied ? (
+                        <Box className="flex-row items-center justify-between">
+                          <Box className="flex-row items-center gap-2.5">
+                            <Icon name="card" size={16} className="text-caramel" />
+                            <Text className="text-[13px] font-bold text-caramel">{promoCode} · {promoPercentLabel(discount, subtotal)} off</Text>
+                          </Box>
+                          <Button label="Remove" variant="link" size="sm" onPress={removePromo} />
+                        </Box>
+                      ) : (
+                        <Box className="flex-row items-center gap-2">
+                          <Input className="flex-1 h-10 px-3">
+                            <InputField
+                              value={code}
+                              onChangeText={setCode}
+                              placeholder="Promo code"
+                              placeholderTextColor={brand.placeholder}
+                              accessibilityLabel="Promo code"
+                              aria-label="Promo code"
+                              autoCapitalize="characters"
+                              className="text-[13px] font-bold text-caramel"
+                            />
+                          </Input>
+                          <Button
+                            label="Apply"
+                            variant="secondary"
+                            size="sm"
+                            loading={applying}
+                            disabled={code.trim().length === 0}
+                            onPress={() => void onApplyPromo()}
+                          />
+                        </Box>
+                      )}
+                      <FormMessage message={promoError} />
+                    </Box>
 
-            <View className="mt-5 gap-2">
-              <Row label="Subtotal" value={`৳${subtotal}`} muted />
-              <Row label="Discount" value={`−৳${discount}`} valueClass="text-sage" muted />
-              <Divider />
-              <View className="flex-row items-center justify-between pt-1">
-                <Text className="text-[14px] font-bold text-ink">Total</Text>
-                <Text className="text-[19px] font-bold text-ink">৳{total}</Text>
-              </View>
-            </View>
-          </ScrollView>
+                    <Box className="mt-5 gap-2">
+                      <Row label="Subtotal" value={`৳${subtotal}`} muted />
+                      <Row label="Discount" value={`−৳${discount}`} valueClass="text-sage" muted />
+                      <Divider />
+                      <Box className="flex-row items-center justify-between pt-1">
+                        <Text className="text-[14px] font-bold text-ink">Total</Text>
+                        <Text className="text-[19px] font-bold text-ink">৳{total}</Text>
+                      </Box>
+                    </Box>
+                  </>
+                }
+              />
+            </Box>
 
-          <View className="px-5 pb-8 pt-2">
-            <PrimaryButton label={`Checkout · ৳${total}`} onPress={() => router.push("/checkout")} />
-          </View>
-        </>
-      )}
-    </View>
+            <Box className="px-5 pb-8 pt-2">
+              <PrimaryButton label={`Checkout · ৳${total}`} onPress={() => router.push("/checkout")} />
+            </Box>
+          </>
+        )}
+      </Box>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -113,9 +131,9 @@ function promoPercentLabel(discount: number, subtotal: number): string {
 
 function Row({ label, value, valueClass = "", muted = false }: { label: string; value: string; valueClass?: string; muted?: boolean }) {
   return (
-    <View className="flex-row items-center justify-between">
+    <Box className="flex-row items-center justify-between">
       <Text className={`text-[13.5px] ${muted ? "text-muted" : "text-ink"}`}>{label}</Text>
       <Text className={`text-[13.5px] font-bold ${valueClass || "text-ink"}`}>{value}</Text>
-    </View>
+    </Box>
   );
 }

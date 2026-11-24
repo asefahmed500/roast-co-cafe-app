@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Box } from "@/components/ui/box";
+import { ScrollView } from "@/components/ui/scroll-view";
 import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, TopBar, Pill, PrimaryButton, EmptyView, FormMessage, IconButton, PressableSurface, a11yState } from "@/components/kit";
@@ -51,33 +52,33 @@ export function CheckoutScreen() {
 
   if (lines.length === 0) {
     return (
-      <View className="flex-1 bg-background">
+      <Box className="flex-1 bg-background">
         <StatusLine />
         <TopBar title="Checkout" />
         <EmptyView title="Nothing to check out" message="Add a few items to your bag first." action="Browse menu" onAction={() => router.replace("/menu")} />
-      </View>
+      </Box>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <Box className="flex-1 bg-background">
       <StatusLine />
       <TopBar title="Checkout" />
 
       <ScrollView className="flex-1 mt-3.5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-        <View className="flex-row bg-[#E8DCC5] rounded-2xl p-1">
+        <Box className="flex-row bg-segment rounded-2xl p-1">
           <Pill label="Pickup" active={mode === "pickup"} onPress={() => setMode("pickup")} className="shadow-none" />
           <Pill label="Dine-in" active={mode === "dine"} onPress={() => setMode("dine")} className="bg-transparent border-0 shadow-none" />
-        </View>
+        </Box>
 
-        <View className="bg-card rounded-[20px] flex-row items-center px-3.5 py-3 mt-3">
-          <View className="w-10 h-10 rounded-full bg-caramel-tint items-center justify-center">
-            <Icon name="pin" size={20} color="#C8873F" />
-          </View>
-          <View className="flex-1 ml-3">
+        <Box className="bg-card rounded-[20px] flex-row items-center px-3.5 py-3 mt-3">
+          <Box className="w-10 h-10 rounded-full bg-caramel-tint items-center justify-center">
+            <Icon name="pin" size={20} className="text-caramel" />
+          </Box>
+          <Box className="flex-1 ml-3">
             <Text className="font-bold text-[14px]">{selectedCafe?.name ?? "Gulshan 2"}</Text>
             <Text className="text-[11.5px] text-muted mt-0.5">{selectedCafe?.address ?? "Road 11 · Counter pickup"}</Text>
-          </View>
+          </Box>
           <IconButton
             name="chev"
             variant="ghost"
@@ -86,17 +87,17 @@ export function CheckoutScreen() {
             hitSlop={6}
             onPress={() => router.push("/choose-cafe?return=/checkout" as never)}
           />
-        </View>
+        </Box>
 
         <Text className="text-[13px] font-bold mt-5 mb-2 text-ink">Pickup time</Text>
-        <View className="flex-row gap-2">
+        <Box className="flex-row gap-2">
           {slots.map((label, i) => (
             <Pill key={label} label={label} active={time === i} onPress={() => setTime(i)} />
           ))}
-        </View>
+        </Box>
 
         <Text className="text-[13px] font-bold mt-5 mb-2 text-ink">Payment</Text>
-        <View className="gap-2">
+        <Box className="gap-2">
           {payments.map((p) => {
             const active = payment === p.id;
             return (
@@ -108,15 +109,15 @@ export function CheckoutScreen() {
                 {...a11yState(active)}
                 className={`bg-card rounded-[12px] h-12 flex-row items-center px-3.5 gap-2.5 ${active ? "border-2 border-caramel" : "border border-line"}`}
               >
-                {p.icon ? <Icon name={p.icon} size={18} color="#8A7566" /> : null}
+                {p.icon ? <Icon name={p.icon} size={18} className="text-muted" /> : null}
                 <Text className="flex-1 text-[13.5px] font-bold">{p.label}</Text>
-                <View className={`w-5 h-5 rounded-full items-center justify-center ${active ? "bg-caramel" : "border border-line"}`}>
-                  {active ? <Icon name="check" size={12} color="#FFFFFF" /> : null}
-                </View>
+                <Box className={`w-5 h-5 rounded-full items-center justify-center ${active ? "bg-caramel" : "border border-line"}`}>
+                  {active ? <Icon name="check" size={12} className="text-on-dark" /> : null}
+                </Box>
               </PressableSurface>
             );
           })}
-        </View>
+        </Box>
 
         <Text className="text-[11px] text-muted mt-3">
           Payment method is recorded with your order. No card or mobile-wallet charge is made in this build.
@@ -125,14 +126,14 @@ export function CheckoutScreen() {
         <FormMessage message={error} />
       </ScrollView>
 
-      <View className="px-5 pb-8 pt-2">
+      <Box className="px-5 pb-8 pt-2">
         <PrimaryButton
           label={`Place order · ৳${total}`}
           variant="caramel"
           loading={busy}
           onPress={() => void placeOrder()}
         />
-      </View>
-    </View>
+      </Box>
+    </Box>
   );
 }

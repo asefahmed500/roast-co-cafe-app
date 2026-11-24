@@ -1,14 +1,18 @@
-import React, { useCallback, useRef, useState } from "react";
-import { Animated, ActivityIndicator, Platform, Pressable, View, type StyleProp, type ViewStyle } from "react-native";
-import { Text } from "@/components/typography";
+import React from "react";
+import { Platform, type StyleProp, type ViewStyle } from "react-native";
+import {
+  Button as GButton,
+  ButtonSpinner as GButtonSpinner,
+  ButtonText as GButtonText,
+} from "@/components/ui/button";
+import { Pressable } from "@/components/ui/pressable";
 import { Icon, type IconName } from "@/components/icons";
 import { a11yState } from "@/components/a11y";
-import { brand } from "@/theme";
 
 /* ------------------------------------------------------------------ *
- * Premium button system — one source of truth for every interactive
- * control in the app. Tokens come from src/theme.ts; only interaction
- * shades live here so hover/active states can be animated.
+ * App buttons built on Gluestack's compound Button primitive.
+ * The public API is unchanged so every screen keeps working, while the
+ * implementation now uses semantic tokens and ButtonText/ButtonIcon.
  * ------------------------------------------------------------------ */
 
 export type ButtonVariant =
@@ -23,82 +27,37 @@ export type ButtonVariant =
 
 export type ButtonSize = "sm" | "md" | "lg";
 
-type Tone = { bg: string; fg: string; border: string; hover: string; active: string };
+type GVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 
-const TONES: Record<Exclude<ButtonVariant, "icon">, Tone> = {
-  primary: {
-    bg: brand.espresso, fg: brand.onDark, border: brand.espresso,
-    hover: "#3D2A20", active: "#241710",
-  },
-  secondary: {
-    bg: brand.caramel, fg: brand.onDark, border: brand.caramel,
-    hover: "#B87B35", active: "#A56C2C",
-  },
-  outline: {
-    bg: brand.card, fg: brand.ink, border: brand.line,
-    hover: "#F6ECDD", active: brand.latte,
-  },
-  ghost: {
-    bg: "transparent", fg: brand.muted, border: "transparent",
-    hover: "rgba(236,220,194,0.55)", active: brand.latte,
-  },
-  destructive: {
-    bg: "#B5483A", fg: brand.onDark, border: "#B5483A",
-    hover: "#9E3D31", active: "#873328",
-  },
-  link: {
-    bg: "transparent", fg: brand.caramel, border: "transparent",
-    hover: "#A9712F", active: brand.espresso,
-  },
-  soft: {
-    bg: brand.latte, fg: brand.espresso, border: "transparent",
-    hover: "#E2D0B4", active: "#D8C3A4",
-  },
+const VARIANTS: Record<ButtonVariant, GVariant> = {
+  primary: "default",
+  secondary: "default",
+  outline: "outline",
+  ghost: "ghost",
+  destructive: "destructive",
+  link: "link",
+  soft: "secondary",
+  icon: "default",
 };
 
-const SIZES: Record<ButtonSize, { height: number; padH: number; font: number; radius: number }> = {
-  sm: { height: 36, padH: 14, font: 13, radius: 8 },
-  md: { height: 42, padH: 18, font: 14, radius: 10 },
-  lg: { height: 48, padH: 22, font: 15, radius: 12 },
+const SIZES: Record<ButtonSize, string> = {
+  sm: "h-9 px-3.5 rounded-lg",
+  md: "h-10 px-4 rounded-lg",
+  lg: "h-12 px-5 rounded-xl",
 };
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+/** Extra classes for brand variants that need a token the stock set lacks. */
+const TONES: Partial<Record<ButtonVariant, string>> = {
+  secondary:
+    "bg-caramel border-caramel data-[hover=true]:bg-caramel/90 data-[active=true]:bg-caramel/90",
+  outline: "bg-card",
+  link: "px-0",
+};
 
-function useButtonMotion(disabled: boolean) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const arrow = useRef(new Animated.Value(0)).current;
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-
-  const spring = useCallback((value: Animated.Value, to: number) => {
-    Animated.spring(value, { toValue: to, useNativeDriver: Platform.OS !== "web", damping: 22, stiffness: 400, mass: 0.5 }).start();
-  }, []);
-
-  return {
-    hovered,
-    focused,
-    setHovered,
-    setFocused,
-    arrow,
-    spring,
-    onPressIn: () => {
-      if (disabled) return;
-      spring(scale, 0.975);
-    },
-    onPressOut: () => spring(scale, 1),
-    scale,
-  };
-}
-
-const webTransition = Platform.OS === "web"
-  ? ({ transition: "background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease" } as Record<string, unknown>)
-  : {};
-
-function focusRing(focused: boolean, fg: string): StyleProp<ViewStyle> {
-  if (Platform.OS === "web") {
-    return { boxShadow: focused ? `0 0 0 3px ${fg}40` : "none" } as StyleProp<ViewStyle>;
-  }
-  return focused ? { borderColor: fg, borderWidth: 2 } : {};
+function webA11y(disabled: boolean, busy: boolean) {
+  return Platform.OS === "web"
+    ? ({ "aria-disabled": disabled, "aria-busy": busy } as Record<string, unknown>)
+    : {};
 }
 
 export type ButtonProps = {
@@ -135,76 +94,39 @@ export function Button({
   hitSlop,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  const { hovered, focused, setHovered, setFocused, arrow, spring, onPressIn, onPressOut, scale } = useButtonMotion(isDisabled);
-  const tone = TONES[variant === "icon" ? "primary" : variant];
-  const metrics = SIZES[size];
-  const background = isDisabled
-    ? (variant === "primary" || variant === "secondary" || variant === "destructive" ? brand.line : "transparent")
-    : hovered ? tone.hover : tone.bg;
-  const foreground = isDisabled ? brand.muted : tone.fg;
+  const classes = [
+    SIZES[size],
+    TONES[variant] ?? "",
+    fullWidth ? "w-full" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const iconTone =
+    variant === "link" ? "text-caramel"
+    : variant === "primary" || variant === "secondary" || variant === "destructive"
+      ? "text-on-dark"
+      : "text-ink";
 
   return (
-    <AnimatedPressable
+    <GButton
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       {...a11yState(selected ?? false, { disabled: isDisabled, busy: loading })}
-      {...(Platform.OS === "web" ? ({ "aria-disabled": isDisabled, "aria-busy": loading } as Record<string, unknown>) : {})}
-      disabled={isDisabled}
+      {...webA11y(isDisabled, loading)}
+      isDisabled={isDisabled}
       hitSlop={hitSlop}
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      onHoverIn={() => !isDisabled && (setHovered(true), spring(arrow, 3))}
-      onHoverOut={() => (setHovered(false), spring(arrow, 0))}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={[
-        {
-          height: metrics.height,
-          paddingHorizontal: metrics.padH,
-          borderRadius: metrics.radius,
-          backgroundColor: background,
-          borderColor: tone.border,
-          borderWidth: variant === "primary" || variant === "secondary" || variant === "destructive" || variant === "outline" ? 1 : 0,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          ...webTransition,
-          opacity: scale,
-          transform: [{ scale }],
-          ...(variant === "link" ? { paddingHorizontal: 0 } : {}),
-          ...(fullWidth ? { alignSelf: "stretch" as const, width: "100%" as const } : {}),
-        },
-        focusRing(focused, tone.fg),
-        style,
-      ]}
-      className={className}
+      variant={VARIANTS[variant]}
+      size={size === "sm" ? "sm" : size === "lg" ? "lg" : "default"}
+      className={classes}
+      style={style}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={tone.fg} />
-      ) : leftIcon ? (
-        <Icon name={leftIcon} size={16} color={foreground} />
-      ) : null}
-      <Text
-        numberOfLines={1}
-        style={{
-          color: foreground,
-          fontSize: metrics.font,
-          fontWeight: "600",
-          letterSpacing: 0.1,
-          textDecorationLine: variant === "link" && hovered ? "underline" : "none",
-          opacity: loading ? 0.9 : 1,
-        }}
-      >
-        {label}
-      </Text>
-      {!loading && rightIcon ? (
-        <Animated.View style={{ transform: [{ translateX: arrow }] }}>
-          <Icon name={rightIcon} size={16} color={foreground} />
-        </Animated.View>
-      ) : null}
-    </AnimatedPressable>
+      {loading ? <GButtonSpinner /> : null}
+      {!loading && leftIcon ? <Icon name={leftIcon} size={16} className={iconTone} /> : null}
+      <GButtonText>{label}</GButtonText>
+      {!loading && rightIcon ? <Icon name={rightIcon} size={16} className={iconTone} /> : null}
+    </GButton>
   );
 }
 
@@ -236,30 +158,22 @@ export function SecondaryButton({
   );
 }
 
-/** Animated tappable surface for cards and list rows (not a labeled button). */
+/** Gluestack Pressable for tappable cards and list rows. */
 export function PressableSurface({
   children,
-  onPress,
-  accessibilityRole = "button",
-  accessibilityLabel,
   className = "",
-  style,
+  accessibilityRole = "button",
   ...rest
 }: React.ComponentProps<typeof Pressable> & { children?: React.ReactNode }) {
-  const { onPressIn, onPressOut, scale } = useButtonMotion(false);
   return (
-    <AnimatedPressable
+    <Pressable
       {...rest}
       accessibilityRole={accessibilityRole}
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      style={[{ ...webTransition, opacity: scale, transform: [{ scale }] }, style as never]}
-      className={className}
+      {...({ role: accessibilityRole } as Record<string, unknown>)}
+      className={`web:cursor-pointer web:transition-transform active:scale-[0.99] ${className}`}
     >
       {children}
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 
@@ -277,6 +191,15 @@ export type IconButtonProps = {
   hitSlop?: number;
 };
 
+const ICON_TONES: Record<NonNullable<IconButtonProps["variant"]>, string> = {
+  soft: "bg-secondary border-transparent",
+  outline: "bg-card border-border",
+  ghost: "bg-transparent border-transparent",
+  primary: "bg-primary border-primary",
+  secondary: "bg-caramel border-caramel",
+  destructive: "bg-destructive border-destructive",
+};
+
 export function IconButton({
   name,
   onPress,
@@ -290,48 +213,31 @@ export function IconButton({
   style,
   hitSlop,
 }: IconButtonProps) {
-  const isDisabled = disabled;
-  const { hovered, focused, setHovered, setFocused, onPressIn, onPressOut, scale } = useButtonMotion(isDisabled);
-  const tone = TONES[variant];
-  const metrics = SIZES[size];
-  const box = metrics.height;
-  const background = isDisabled ? brand.line : active ? brand.caramelTint : hovered ? tone.hover : tone.bg;
-  const iconColor = isDisabled ? brand.muted : active ? brand.caramel : tone.fg;
+  const classes = [
+    "web:cursor-pointer items-center justify-center",
+    ICON_TONES[variant],
+    active ? "bg-caramel-tint border-caramel" : "",
+    size === "sm" ? "h-9 w-9" : size === "lg" ? "h-12 w-12" : "h-10 w-10",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <AnimatedPressable
+    <GButton
       accessibilityRole={role}
+      role={role}
       accessibilityLabel={accessibilityLabel ?? name}
-      {...a11yState(active, { disabled: isDisabled })}
-      disabled={isDisabled}
+      {...a11yState(active, { disabled })}
+      {...webA11y(disabled, false)}
+      isDisabled={disabled}
       hitSlop={hitSlop}
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      onHoverIn={() => !isDisabled && setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={[
-        {
-          width: box,
-          height: box,
-          borderRadius: metrics.radius,
-          backgroundColor: background,
-          borderColor: active ? brand.caramel : tone.border,
-          borderWidth: variant === "ghost" ? 0 : 1,
-          alignItems: "center",
-          justifyContent: "center",
-          ...webTransition,
-          opacity: scale,
-          transform: [{ scale }],
-        },
-        focusRing(focused, active ? brand.caramel : tone.fg),
-        style,
-      ]}
-      className={className}
+      variant="ghost"
+      className={classes}
+      style={style}
     >
-      <Icon name={name} size={size === "sm" ? 16 : size === "lg" ? 22 : 19} color={iconColor} />
-    </AnimatedPressable>
+      <Icon name={name} size={size === "sm" ? 16 : size === "lg" ? 22 : 19} className={active ? "text-caramel" : "text-ink"} />
+    </GButton>
   );
 }

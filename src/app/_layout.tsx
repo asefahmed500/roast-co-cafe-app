@@ -12,6 +12,7 @@ import {
   Geist_700Bold,
 } from "@expo-google-fonts/geist";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
+import { Box } from "@/components/ui/box";
 import { AuthProvider, useAuth } from "@/context/auth";
 import { CatalogProvider } from "@/context/catalog";
 import { CafeProvider } from "@/context/cafe";
@@ -71,7 +72,9 @@ export default function RootLayout() {
                 <FavoritesProvider>
                   <CartProvider>
                     <StatusBar hidden />
-                    <RootNavigator />
+                    <Box className="flex-1 w-full bg-background web:max-w-[480px] web:mx-auto web:shadow-2xl">
+                      <RootNavigator />
+                    </Box>
                   </CartProvider>
                 </FavoritesProvider>
               </CafeProvider>

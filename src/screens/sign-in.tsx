@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { Box } from "@/components/ui/box";
+import { KeyboardAvoidingView } from "@/components/ui/keyboard-avoiding-view";
+import { ScrollView } from "@/components/ui/scroll-view";
 import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { loginSchema } from "../../shared/validation";
@@ -51,66 +53,68 @@ export function SignInScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <StatusLine />
-      <TopBar title="" onBack={() => router.back()} />
+    <KeyboardAvoidingView className="flex-1">
+      <ScrollView className="flex-1 bg-background" keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
+        <StatusLine />
+        <TopBar title="" onBack={() => router.back()} />
 
-      <View className="px-5 mt-4">
-        <View className="w-11 h-11 rounded-[15px] bg-caramel items-center justify-center">
-          <Illustration name="bean" size={28} />
-        </View>
-        <Text className="text-[27px] leading-tight font-bold tracking-tight mt-5 text-ink">
-          Welcome{"\n"}back
+        <Box className="px-5 mt-4">
+          <Box className="w-11 h-11 rounded-[15px] bg-caramel items-center justify-center">
+            <Illustration name="bean" size={28} />
+          </Box>
+          <Text className="text-[27px] leading-tight font-bold tracking-tight mt-5 text-ink">
+            Welcome{"\n"}back
+          </Text>
+          <Text className="text-[13px] text-muted mt-2">Sign in to order ahead and skip the queue.</Text>
+
+          <Box className="mt-7">
+            <TextField
+              label="Email address"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              error={errors.email}
+            />
+            <TextField
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Your password"
+              secure
+              error={errors.password}
+              onSubmitEditing={() => void submit()}
+            />
+          </Box>
+
+          <FormMessage message={message} />
+          <PrimaryButton label="Sign in" onPress={() => void submit()} loading={busy} className="mt-5" />
+
+          <Box className="mt-3">
+            <Button
+              label="Explore demo account"
+              variant="outline"
+              size="md"
+              fullWidth
+              loading={demoBusy}
+              onPress={() => void enterDemo()}
+            />
+          </Box>
+          <Text className="text-[11px] text-muted text-center mt-2">
+            Preloaded cart, favourites and an order — no signup needed.
+          </Text>
+          <FormMessage message={demoError} />
+
+          <Box className="flex-row items-center justify-center mt-5 gap-1">
+            <Text className="text-[13px] text-muted">New to Roast &amp; Co.?</Text>
+            <Button label="Create account" variant="link" size="sm" onPress={() => router.push("/sign-up" as never)} />
+          </Box>
+        </Box>
+
+        <Text className="text-[11.5px] text-muted text-center px-6 mt-auto pb-7">
+          By continuing you agree to our Terms and Privacy Policy.
         </Text>
-        <Text className="text-[13px] text-muted mt-2">Sign in to order ahead and skip the queue.</Text>
-
-        <View className="mt-7">
-          <TextField
-            label="Email address"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            error={errors.email}
-          />
-          <TextField
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Your password"
-            secure
-            error={errors.password}
-            onSubmitEditing={() => void submit()}
-          />
-        </View>
-
-        <FormMessage message={message} />
-        <PrimaryButton label="Sign in" onPress={() => void submit()} loading={busy} className="mt-5" />
-
-        <View className="mt-3">
-          <Button
-            label="Explore demo account"
-            variant="outline"
-            size="md"
-            fullWidth
-            loading={demoBusy}
-            onPress={() => void enterDemo()}
-          />
-        </View>
-        <Text className="text-[11px] text-muted text-center mt-2">
-          Preloaded cart, favourites and an order — no signup needed.
-        </Text>
-        <FormMessage message={demoError} />
-
-        <View className="flex-row items-center justify-center mt-5 gap-1">
-          <Text className="text-[13px] text-muted">New to Roast &amp; Co.?</Text>
-          <Button label="Create account" variant="link" size="sm" onPress={() => router.push("/sign-up" as never)} />
-        </View>
-      </View>
-
-      <Text className="text-[11.5px] text-muted text-center px-6 mt-auto pb-7">
-        By continuing you agree to our Terms and Privacy Policy.
-      </Text>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

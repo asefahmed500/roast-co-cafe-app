@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Box } from "@/components/ui/box";
+import { FlatList } from "@/components/ui/flat-list";
 import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, TopBar, EmptyView, ErrorView, LoadingView, PressableSurface } from "@/components/kit";
@@ -23,7 +24,7 @@ export function OrderHistoryScreen() {
   useEffect(() => { void load(); }, [load]);
 
   return (
-    <View className="flex-1 bg-background">
+    <Box className="flex-1 bg-background">
       <StatusLine />
       <TopBar title="Order history" />
 
@@ -32,31 +33,35 @@ export function OrderHistoryScreen() {
       ) : orders.length === 0 ? (
         <EmptyView title="No orders yet" message="Your placed orders will appear here." action="Browse menu" onAction={() => router.replace("/menu")} />
       ) : (
-        <ScrollView className="flex-1 mt-3.5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-          <View className="gap-2.5">
-            {orders.map((order) => (
+        <Box className="flex-1 mt-3.5">
+          <FlatList
+            data={orders}
+            keyExtractor={(order) => order.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
+            ItemSeparatorComponent={() => <Box className="h-2.5" />}
+            renderItem={({ item: order }) => (
               <PressableSurface
-                key={order.id}
                 onPress={() => router.push(`/order/${order.id}`)}
                 accessibilityLabel={`Order ${order.orderNumber}`}
                 className="bg-card rounded-[12px] p-3.5"
               >
-                <View className="flex-row items-center justify-between">
+                <Box className="flex-row items-center justify-between">
                   <Text className="text-[14px] font-bold text-ink">Order #{order.orderNumber}</Text>
                   <Text className="text-[12px] font-bold text-caramel capitalize">{order.status.replace("_", " ")}</Text>
-                </View>
+                </Box>
                 <Text className="text-[11.5px] text-muted mt-1" numberOfLines={1}>
                   {order.items.map((item) => `${item.qty} × ${item.name}`).join(", ")}
                 </Text>
-                <View className="flex-row items-center justify-between mt-2">
+                <Box className="flex-row items-center justify-between mt-2">
                   <Text className="text-[11.5px] text-muted">{new Date(order.createdAt).toLocaleDateString()}</Text>
                   <Text className="text-[14px] font-bold text-ink">৳{order.total}</Text>
-                </View>
+                </Box>
               </PressableSurface>
-            ))}
-          </View>
-        </ScrollView>
+            )}
+          />
+        </Box>
       )}
-    </View>
+    </Box>
   );
 }

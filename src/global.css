@@ -35,6 +35,14 @@
     --caramel-tint: 246 232 211;
     --on-dark: 255 255 255;
     --on-dark-muted: 205 184 160;
+
+    /* Supporting surface tokens — semantic names for the remaining design roles. */
+    --placeholder: 176 154 133;
+    --line-strong: 216 196 164;
+    --caramel-deep: 155 123 96;
+    --map: 232 223 204;
+    --dots: 217 200 172;
+    --segment: 232 220 197;
   }
 }
 
@@ -67,4 +75,11 @@
   --color-caramel-tint: rgb(var(--caramel-tint));
   --color-on-dark: rgb(var(--on-dark));
   --color-on-dark-muted: rgb(var(--on-dark-muted));
+
+  --color-placeholder: rgb(var(--placeholder));
+  --color-line-strong: rgb(var(--line-strong));
+  --color-caramel-deep: rgb(var(--caramel-deep));
+  --color-map: rgb(var(--map));
+  --color-dots: rgb(var(--dots));
+  --color-segment: rgb(var(--segment));
 }

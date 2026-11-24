@@ -17,6 +17,15 @@ export const brand = {
   caramelTint: "#F6E8D3",
   onDark: "#FFFFFF",
   onDarkMuted: "#CDB8A0",
+  // Supporting roles mirrored from global.css semantic tokens. Raw values live
+  // here only because a few native props (placeholderTextColor, SVG stroke,
+  // ActivityIndicator color) require a concrete color string.
+  placeholder: "#B09A85",
+  lineStrong: "#D8C4A4",
+  caramelDeep: "#9B7B60",
+  map: "#E8DFCC",
+  dots: "#D9C8AC",
+  segment: "#E8DCC5",
 } as const;
 
 export const spacing = {

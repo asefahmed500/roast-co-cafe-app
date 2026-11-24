@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Box } from "@/components/ui/box";
+import { ScrollView } from "@/components/ui/scroll-view";
 import { Text } from "@/components/typography";
 import { router } from "expo-router";
 import { StatusLine, BottomNav, Button, Chip, RoundButton, SectionTitle, ProductCard } from "@/components/kit";
@@ -49,18 +50,18 @@ export function HomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <Box className="flex-1 bg-background">
       <StatusLine />
-      <View className="flex-row items-center justify-between px-5 mt-1">
-        <View>
+      <Box className="flex-row items-center justify-between px-5 mt-1">
+        <Box>
           <Text className="text-[12.5px] text-muted">{greeting()}</Text>
           <Text className="text-[19px] font-bold tracking-tight text-ink">{user?.name.split(" ")[0] ?? "there"}</Text>
-        </View>
+        </Box>
         <RoundButton name="bell" onPress={() => void toggleNotifications()} />
-      </View>
+      </Box>
 
       {showNotifications ? (
-        <View className="mx-5 mt-3 bg-card rounded-[12px] p-3.5 border border-line">
+        <Box accessibilityLiveRegion="polite" className="mx-5 mt-3 bg-card rounded-[12px] p-3.5 border border-line">
           <Text className="text-[13px] font-bold text-ink">Order updates</Text>
           {notificationsLoading ? (
             <Text className="text-[12px] text-muted mt-1">Loading…</Text>
@@ -70,17 +71,17 @@ export function HomeScreen() {
             <Text className="text-[12px] text-muted mt-1">No order updates yet. Place an order to see it here.</Text>
           ) : (
             orders.map((order) => (
-              <View key={order.id} className="flex-row items-center justify-between mt-2">
+              <Box key={order.id} className="flex-row items-center justify-between mt-2">
                 <Text className="text-[12px] text-ink">Order #{order.orderNumber}</Text>
                 <Text className="text-[11.5px] font-semibold text-caramel capitalize">{order.status.replace("_", " ")}</Text>
-              </View>
+              </Box>
             ))
           )}
-        </View>
+        </Box>
       ) : null}
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
-        <View className="px-5 mt-3.5">
+        <Box className="px-5 mt-3.5">
           <Button
             label="Search coffee, pastry…"
             variant="soft"
@@ -89,42 +90,42 @@ export function HomeScreen() {
             leftIcon="search"
             onPress={() => router.push("/menu")}
           />
-        </View>
+        </Box>
 
         {error ? (
-          <View className="px-5 mt-2">
+          <Box className="px-5 mt-2">
             <Text className="text-[11.5px] text-destructive">Offline menu — changes will sync when the server is back.</Text>
-          </View>
+          </Box>
         ) : null}
 
-        <View className="px-5 mt-3.5">
-          <View className="bg-espresso rounded-[24px] h-[124px] p-4 relative overflow-hidden">
+        <Box className="px-5 mt-3.5">
+          <Box className="bg-espresso rounded-[24px] h-[124px] p-4 relative overflow-hidden">
             <Text className="text-[10.5px] font-bold text-caramel tracking-[2px]">TODAY ONLY</Text>
-            <Text className="text-[21px] font-bold leading-tight text-white mt-1.5">
+            <Text className="text-[21px] font-bold leading-tight text-on-dark mt-1.5">
               10% off your order{"\n"}with COFFEE10
             </Text>
-            <View className="self-start mt-2.5">
+            <Box className="self-start mt-2.5">
               <Button label="Use code" variant="secondary" size="sm" onPress={() => router.push("/bag")} />
-            </View>
-            <View className="absolute right-1 top-2">
+            </Box>
+            <Box className="absolute right-1 top-2">
               <Illustration name="iced" size={104} />
-            </View>
-          </View>
-        </View>
+            </Box>
+          </Box>
+        </Box>
 
-        <View className="px-5 mt-3.5 flex-row gap-2 flex-wrap">
+        <Box className="px-5 mt-3.5 flex-row gap-2 flex-wrap">
           {categories.map((c) => (
             <Chip key={c} label={c} active={category === c} onPress={() => setCategory(c)} />
           ))}
-        </View>
+        </Box>
 
-        <View className="px-5 mt-4">
+        <Box className="px-5 mt-4">
           <SectionTitle title="Popular" action="See all" onAction={() => router.push("/menu")} />
-        </View>
+        </Box>
 
-        <View className="px-5 mt-2.5 flex-row gap-3 flex-wrap">
+        <Box className="px-5 mt-2.5 flex-row gap-3 flex-wrap">
           {popular.map((item) => (
-            <View key={item.id} className="w-[47%]">
+            <Box key={item.id} className="w-[47%]">
               <ProductCard
                 name={item.name}
                 price={item.price}
@@ -143,12 +144,12 @@ export function HomeScreen() {
                   })
                 }
               />
-            </View>
+            </Box>
           ))}
-        </View>
+        </Box>
       </ScrollView>
 
       <BottomNav active="home" count={count} />
-    </View>
+    </Box>
   );
 }
